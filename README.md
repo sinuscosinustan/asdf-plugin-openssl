@@ -1,36 +1,94 @@
-# asdf-plugin-template [![Build](https://github.com/asdf-vm/asdf-plugin-template/actions/workflows/build.yml/badge.svg)](https://github.com/asdf-vm/asdf-plugin-template/actions/workflows/build.yml) [![Lint](https://github.com/asdf-vm/asdf-plugin-template/actions/workflows/lint.yml/badge.svg)](https://github.com/asdf-vm/asdf-plugin-template/actions/workflows/lint.yml)
+asdf-openssl
+=============
 
-This is an [asdf-vm plugin](https://asdf-vm.com/#/plugins-create) template with CI to run [Shellcheck](https://github.com/koalaman/shellcheck) and testing with the [asdf test GitHub Action](https://github.com/asdf-vm/actions).
+## Dependencies
 
-## Usage
+OpenSSL is built from source, so a working toolchain is required:
 
-1. [Generate](https://github.com/asdf-vm/asdf-plugin-template/generate) a new repository based on this template.
-1. Clone it and run `bash setup.bash`.
-1. Force push to your repo: `git push --force-with-lease`.
-1. Adapt your code at the TODO markers. To find the markers: `git grep TODO`.
-1. To develop your plugin further, please read [the plugins create section of the docs](https://asdf-vm.com/plugins/create.html).
+- `make`
+- `perl` 5
+- C99 compiler (`gcc` or `clang`)
+- zlib development headers (`zlib1g-dev`, `zlib-devel`)
 
->A feature of this plugin-template when hosted on GitHub is the use of [release-please](https://github.com/googleapis/release-please), an automated release tool. It leverages [Conventional Commit messages](https://www.conventionalcommits.org/) to determine semver release type, see the [documentation](https://github.com/googleapis/release-please).
+Plus `bash`, `curl`, `tar` and `git`.
 
-## Contributing
+## Install
 
-Contributions welcome!
+Plugin:
 
-1. Install `asdf` tools
+```shell
+asdf plugin add openssl https://github.com/sinuscosinustan/asdf-plugin-openssl.git
+```
 
-    ```shell
-    asdf plugin add shellcheck https://github.com/luizm/asdf-shellcheck.git
-    asdf plugin add shfmt https://github.com/luizm/asdf-shfmt.git
-    asdf install
-    ```
+openssl:
 
-1. Develop!
+```shell
+# Show all installable versions
+asdf list all openssl
 
-1. Lint & Format
+# Install latest stable version
+asdf install openssl latest
 
-    ```shell
-    ./scripts/format.bash
-    ./scripts/lint.bash
-    ```
+# Install a specific version
+asdf install openssl 4.0.2
 
-1. PR changes
+# Set a version globally (on your ~/.tool-versions file)
+asdf set --home openssl latest
+
+# Verify
+openssl version
+```
+
+Both OpenSSL **3.x and 4.x** are supported.
+
+Check [asdf](https://github.com/asdf-vm/asdf) readme for more instructions on how
+to install & manage versions.
+
+## Build options
+
+By default the plugin configures OpenSSL as:
+
+```shell
+./Configure --prefix=<install path> \
+            --openssldir=<install path>/ssl \
+            --libdir=lib \
+            shared zlib \
+            -Wl,-rpath,<install path>/lib
+```
+
+The trailing flag list can be replaced with `ASDF_OPENSSL_CONFIGURE_OPTIONS`:
+
+```shell
+ASDF_OPENSSL_CONFIGURE_OPTIONS="shared zlib no-tests enable-fips" asdf install openssl 4.0.2
+```
+
+Note that OpenSSL 4.0 removed engine support entirely, thus `no-engine` is not
+required!
+
+## Environment
+
+The plugin ships an `exec-env` that exports the variables build systems look for:
+
+`OPENSSL_DIR`, `OPENSSL_ROOT_DIR`, `OPENSSL_INCLUDE_DIR`, `OPENSSL_LIB_DIR`,
+`SSL_CERT_DIR`, `PKG_CONFIG_PATH`, `CPPFLAGS`, `LDFLAGS`, and
+`LD_LIBRARY_PATH` (`DYLD_LIBRARY_PATH` on macOS).
+
+asdf applies these to the `openssl` shim itself, and to any command you run
+through `asdf env openssl`:
+
+```shell
+# Inspect what gets exported
+asdf env openssl
+
+# Build something against this OpenSSL
+asdf env openssl ./configure
+asdf env openssl cargo build
+```
+
+That covers, among others, Rust's `openssl-sys`, CMake's `FindOpenSSL`, and
+autotools/`pkg-config` based builds. To get the same variables into an
+interactive shell, source them:
+
+```shell
+eval "$(asdf env openssl | sed 's/^/export /')"
+```

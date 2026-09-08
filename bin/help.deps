@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+cat <<'TEXT'
+make
+perl (5, with core modules)
+a C99 compiler (gcc or clang)
+zlib development headers
+TEXT

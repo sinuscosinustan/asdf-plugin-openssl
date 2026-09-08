@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+cat <<'TEXT'
+It's OpenSSL. No explanation required, I guess.
+
+Configure flags can be overridden with ASDF_OPENSSL_CONFIGURE_OPTIONS, e.g.
+
+    ASDF_OPENSSL_CONFIGURE_OPTIONS="shared zlib no-tests" asdf install openssl 4.0.2
+TEXT
